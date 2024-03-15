@@ -141,4 +141,118 @@ class AppController {
     }
 }
 
-the function getRootRoute will be cause with the url : /app/hi
+the function getRootRoute will be called with the url : /app/hi
+
+
+
+3 : Generating project with Nest CLI
+
+install nest cli
+npm install -g @nestjs/cli
+
+create a new project
+nest new my-project
+
+start your project in a development mode
+npm run start:dev
+
+generate a module
+nest generate module my-module
+
+generate a controller
+nest generate controller messages/messages --flat
+nest generate
+controller -> type of class to generate
+messages/ -> place the file in the messages folder
+messages -> class name
+-- flat -> don't create an extra folder called 'controller'
+
+
+
+4 : Accessing request data with decorators
+
+A request is a just a couple of different lines of text
+METTRE IMAGE nesjs-http-request.png
+
+
+ET nesjs-http-request-2.png
+
+@Post()
+createMessage(@Body() body: any) {
+    console.log(body)
+}
+Nest is going to automatically extract the body of the incoming request and provide it as an argument
+
+@Get('/:id')
+getMessage(@Param('id') id:string) {
+    console.log( id )
+}
+
+
+5 : Using Pipes for validation
+install the class-validator library to take advantage of ValidationPipe
+npm install --save class-validator
+
+install the class-transformer library to take advantage of ValidationPipe
+npm install --save class-transformer
+
+in main.js
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(MessagesModule);
+  app.useGlobalPipes(
+    new ValidationPipe()
+  );
+  await app.listen(3000);
+}
+
+DTO : Data transfer object
+
+In the folder messages, create a folder 'dto'
+In that dto folder, create a create-message.dto.ts file
+
+import { IsString } from "class-validator";
+
+export class CreateMessageDto {
+    @IsString()
+    content: string
+}
+
+in the message controller, update the create message method
+
+import { CreateMessageDto } from './dtos/create-message.dto';
+
+@Post()
+createMessage(@Body() body: CreateMessageDto) {
+    console.log(body)
+}
+
+And that's it ! We have now set up validation
+
+The validation pipe use clas-tranformer to turn the body into an instance of the DTO class
+For more informations on class-transformer
+See readme on https://github.com/typestack/class-transformer
+
+Then the validation pipe use class-validator to validate the instance
+For more informations on class-validator like IsString()
+See readme on https://github.com/typestack/class-validator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
