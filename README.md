@@ -341,10 +341,29 @@ You can throw any of4 these excepetions and Nest will automataically convert the
 503 timeout
 
 
+7 - Nest architecture : Organizing code with modules
 
+Dependcy Injectoin between modules
 
+Add the service to the module list of exports
+@Module({
+  providers: [PowerService],
+  exports: [PowerService]
+})
 
+exports
+that mean that this class is available to others modules of our project
 
+Import the module into the other module
+@Module({
+  imports: [PowerModule],
+  providers: [CpuService]
+})
+
+imports
+we have now connected 2 modules (Power and Cpu modules)
+
+Define the constructor method on CpuService and PowerService to it
 
 
 
