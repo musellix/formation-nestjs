@@ -239,12 +239,106 @@ For more informations on class-validator like IsString()
 See readme on https://github.com/typestack/class-validator
 
 
+6 - Nest architeture : Services and repositories
+
+We are going to have a message service and a message repository
+Frequently end up having very similar methode names
+
+Service : place to put any business logic
+Use one or more repository to find or store data
+
+import { Injectable } from "@nestjs/common";
+import { MessagesRepository } from "./messages.repository";
+
+@Injectable()
+export class MessagesService {
+
+    constructor( public messagesRepository: MessagesRepository ) {}
+
+    findOne( id:string ) {
+        return this.messagesRepository.findOne( id )
+    }
+
+    findAll() {
+        return this.messagesRepository.findAll();
+    }
+
+    create(content:string) {
+        return this.messagesRepository.create( content )
+    }
+}
+
+Repositories : place to put storage-related logic
+Usually ends up being a TyperORM entity, a Mongoose schema or similar
+
+import { readFile, writeFile } from "fs/promises";
+
+@Injectable()
+export class MessagesRepository {
+
+    async findOne( id:string ) {
+        const contents = await readFile( 'messages.json', 'utf8' );
+        const messages = JSON.parse(contents)
+        return messages[id];
+    }
+
+    async findAll() {
+        const contents = await readFile( 'messages.json', 'utf8' );
+        const messages = JSON.parse(contents)
+        return messages;
+    }
+
+    async create(content:string) {
+        const contents = await readFile( 'messages.json', 'utf8');
+        const messages = JSON.parse(contents)
+        const id = Math.floor(Math.random() * 1000);
+        messages[id] = {id, content};
+
+        await writeFile('messages.json', JSON.stringify(messages))
+    }
+}
 
 
+Dependance Injection Flow
+1 - At startup, register all classes with the container
+2 - Container will figure out what each dependency each class has
+-- For this, use the 'Injectable' decorator on each class and them to the modules list of providers
+
+3 - We then ask the container to create an instance of a class for us
+4 - Container creates all required dependencies and gives us the instance
+5 - Container will hold onto the created dependency instances and reuse them if needed
+-- Happens automaticall. Nest will try to create controller instance for us
+
+We add @Injectable() decorator in the service class and in the repository class to inject them 
 
 
+In Messages.module, add the service and the repository in the providers
+Providers means "things that can be used as dependecies for other classes"
+
+@Module({
+  controllers: [MessagesController],
+  providers: [MessagesService, MessagesRepository]
+})
 
 
+Reporting Errors with Exceptions
+In the controller, we can add a NotFoundException
+
+    @Get('/:id')
+    getMessage(@Param('id') id:string) {
+        const message = this.messagesService.findOne(id);
+        if( !message) {
+            throw new NotFoundException( `no message for id : ${id}` )
+        }
+        return message;
+    }
+
+There are different kind of execeptions that Nest defines for us
+You can throw any of4 these excepetions and Nest will automataically convert them into an appropriate status code, and an appropriate error message to send back to the user
+404 not found
+400 bad request
+500 internal error
+503 timeout
 
 
 
