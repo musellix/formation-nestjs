@@ -366,6 +366,88 @@ we have now connected 2 modules (Power and Cpu modules)
 Define the constructor method on CpuService and PowerService to it
 
 
+8 - Persisting data with TypeORM
+
+Nest work fine with any ORM, but works well out of the box with TypeORM and Mongoose
+TypeORM --> SQLite, PostGre, MySql, MongoDB
+Mongoose --> MongoDB
+
+For right now, to ease of setup, we'll use SQLite
+npm install --save @nestjs/typeorm
+npm install --save typeorm
+npm install --save sqlite3
+
+When we use TypeORM, we don't have to create repository files manually
+We have to create Entity file for each module, and TypeORM will generate automatically Repository files
+Entity files list the different properties that an object has (for example, an User or a Report)
+
+Setting up the connexion to SQLite DB
+
+In the app.module.ts file
+@Module({
+  imports: [ TypeOrmModule.forRoot({
+    type: 'sqlite',
+    database: 'db.sqlite',
+    entities: [],
+    synchronize: true,
+  }),
+    UsersModule, ReportsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+
+Now, when you launch your application (npm run start:dev), a db.sqlite file will be create at the root of your project
+
+Creating an Entity and Repository
+
+Creating an Entity
+- Create an entity file and create a class in it that lists all the properties that your entity will have
+
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+user.entity.ts
+@Entity()
+export class User {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column()
+    email: string;
+
+    @Column()
+    password: string
+}
+
+- Connect the entity to its parent module. This create a repository
+in user.module.ts
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [UsersService],
+  controllers: [UsersController]
+})
+
+- Connect the entity to the root connection (in the app module)
+in app.module.ts
+@Module({
+  imports: [ TypeOrmModule.forRoot({
+    type: 'sqlite',
+    database: 'db.sqlite',
+    entities: [User],
+    synchronize: true,
+  }),
+    UsersModule, ReportsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+
+TypeORM and Nest working together should have created this user repository for us
+
+
+
+
+
+
+
 
 
 
