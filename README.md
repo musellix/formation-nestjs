@@ -442,6 +442,11 @@ in app.module.ts
 
 TypeORM and Nest working together should have created this user repository for us
 
+We want to focus on the "synchronize: true," option
+When we want to change the structure of a database in any way (rename a column, add/remove a column, ...), we run something called a Migration. A migration is a little piece of code that somehow change the structure of our database
+This synchronize: true feature is only for use in the development environment
+This option, when set to true, is going to cause type to take a look at the str7ucture of all your differents entities and then automatically update the structure of your database
+Never run that synchronize feture of true in a production. Use Migration
 
 
 
