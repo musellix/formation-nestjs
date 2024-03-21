@@ -202,7 +202,9 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(MessagesModule);
   app.useGlobalPipes(
-    new ValidationPipe()
+    new ValidationPipe({
+      whitelist: true
+    })
   );
   await app.listen(3000);
 }
@@ -229,6 +231,10 @@ createMessage(@Body() body: CreateMessageDto) {
 }
 
 And that's it ! We have now set up validation
+
+whitelist: true option in the main js
+this option is a security as we don't want to allow users to add in additional properties to incoming request
+In out example, the body must only have "content" property
 
 The validation pipe use clas-tranformer to turn the body into an instance of the DTO class
 For more informations on class-transformer
@@ -448,6 +454,17 @@ This synchronize: true feature is only for use in the development environment
 This option, when set to true, is going to cause type to take a look at the str7ucture of all your differents entities and then automatically update the structure of your database
 Never run that synchronize feture of true in a production. Use Migration
 
+
+9 - Creating and Saving Data
+
+In the service file
+@Injectable()
+export class UsersService {
+    constructor(@InjectRepository(User) private repository: Repository<User>) {}
+}
+
+Repository<User> : The type of repository is a Repository and we applied a generic type to it of User
+@InjectRepository(User) : This is a little bit of an aid to the dependency injection system that we need the user repository. This is because the dependency injection system does not play nicely with generics
 
 
 
