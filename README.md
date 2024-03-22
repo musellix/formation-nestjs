@@ -466,6 +466,88 @@ export class UsersService {
 Repository<User> : The type of repository is a Repository and we applied a generic type to it of User
 @InjectRepository(User) : This is a little bit of an aid to the dependency injection system that we need the user repository. This is because the dependency injection system does not play nicely with generics
 
+In users.service
+public create(email:string, password: string ) {
+    const user = this.repository.create({ email, password});
+    return this.repository.save(user);
+}
+
+repository.create -> create an instance of an entity
+repository.save -> save is used for actual persistence
+
+Hooks
+In our entity class, Hooks allow us to define functions on an entity that will be called automatically at certain points
+
+import { AfterInsert, AfterRemove, AfterUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+@Entity()
+export class User {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column()
+    email: string;
+
+    @Column()
+    password: string;
+
+    @AfterInsert()
+    logInsert() {
+        console.log( `Inserted User with id ${this.id}` )
+    }
+    
+    @AfterUpdate()
+    logUpdate() {
+        console.log( `Updated User with id ${this.id}` )
+    }
+
+    @AfterRemove()
+    logRemove() {
+        console.log( `Removed User with id ${this.id}` )
+    }
+}
+
+In the service, you can save an entity without create an instance
+For example, you can save an user like that : 
+this.repository.save({ email, password});
+instead of
+this.repository.save(user);
+
+But with the first version, you don't create an entity and the hooks are not executed
+Always get an entity instance and thensave or update
+
+Also, use nestJs calls : 
+save() vs insert() and update()
+If you call save(), the hooks will be executed
+Not with insert(), nor update()
+
+remove() vs delete()
+If you call remove(), the hooks will be executed
+Not with delete()
+
+
+Updating data
+public async update(id: number, attrs: Partial<User>): Promise<User> {
+    const user = await this.findOne( id );
+    if( !user ) {
+        throw new Error( `User ${id} not found` )
+    }
+    Object.assign( user, attrs );
+    return this.repository.save(user)
+}
+
+If we want to update some properties of an object (for exemample, only the email), we don't need to create an object and set all properties to null. We can use the utility types Partial
+
+In order to apply an update, we first need a user entity instance (findOne). There is downside of this approach : we first have to fetch out of our database the user that we are trying to update 
+If we use the update() method directly, that would require just one single trip to our database. buts the hooks will not be executed
+We're kind of paying in performance for having fancy functionality (hooks) that we probably wants (Not required, you can definitely build application without them)
+
+
+Removing data
+
+
+
+
 
 
 
