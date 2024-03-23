@@ -617,3 +617,61 @@ A very easy thing to do here would be to implement your own custom exception fil
 
 10 - Custom Data Serialization
 
+Excluding response properties
+
+If I fetch a particular user, and the response includes the password of the user
+{
+  "id": 2,
+  "email": "bbb@bbb.com",
+  "password": "azerty"
+}
+We are going to encrypt the password, and decide which properties we want to be returned
+
+in user.entity1
+import { Exclude } from "class-transformer";
+
+@Column()
+@Exclude()
+password: string;
+
+in user.controller
+// GET /auth/:id
+@UseInterceptors(ClassSerializerInterceptor)
+@Get("/:id")
+findUser( @Param('id') id:string ): Promise<User> {
+    return this.usersService.findOne( parseInt(id, 10) );
+}
+
+and that's it. Now if I fetch a particular user, we've got :
+{
+  "id": 2,
+  "email": "bbb@bbb.com"
+}
+
+
+Solution to Serialization
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
