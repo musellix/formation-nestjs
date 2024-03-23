@@ -524,13 +524,14 @@ Not with insert(), nor update()
 remove() vs delete()
 If you call remove(), the hooks will be executed
 Not with delete()
-
+remove() is designed to work with an entity
+delete() is designed to work with just a plain ID or some kind of search criteria as delete({ email: aaa@aaa.fr})
 
 Updating data
 public async update(id: number, attrs: Partial<User>): Promise<User> {
     const user = await this.findOne( id );
     if( !user ) {
-        throw new Error( `User ${id} not found` )
+        throw new NotFoundException( `User ${id} not found` )
     }
     Object.assign( user, attrs );
     return this.repository.save(user)
@@ -544,14 +545,75 @@ We're kind of paying in performance for having fancy functionality (hooks) that 
 
 
 Removing data
+public async remove(id: number): Promise<User> {
+    const user = await this.findOne( id );
+    if( !user ) {
+        throw new NotFoundException( `User ${id} not found` )
+    }
+    return this.repository.remove(user)
+}
 
 
+Routes in the controller
+Some examples of routes with differents kinds of parameters
+    // POST /auth/signup
+    @Post("/signup")
+    createUser(@Body() body: CreateUserDto): void {
+        this.usersService.create(body.email, body.password);
+    }
+
+    // GET /auth?email=aaa@aaa.fr
+    @Get("")
+    findAllUsers(@Query('email') email: string): Promise<User[]> {
+        return this.usersService.find( email )
+    }
+
+    // GET /auth/:id
+    @Get("/:id")
+    findUser( @Param('id') id:string ): Promise<User> {
+        return this.usersService.findOne( parseInt(id, 10) );
+    }
+
+    // PATCH /auth/:id
+    @Patch("/:id")
+    updateUser( @Param('id') id:string, @Body() body: UpdateUserDto ): void {
+        this.usersService.update( parseInt(id, 10), body )
+    }
+
+    // DELETE /auth/:id
+    @Delete("/:id")
+    removeUser(@Param('id') id:string): void {
+        this.usersService.remove( parseInt(id, 10) )
+    }
 
 
+- update
+For the update, we need to create a new Dto file to set optionnal the differents properties. We can do it with the decorator @Optional()
+
+import { IsEmail, IsOptional, IsString } from "class-validator";
+
+export class UpdateUserDto {
+    @IsEmail()
+    @IsOptional()
+    email: string
+    
+    @IsString()
+    @IsOptional()
+    password: string
+}
 
 
+Exceptions
+Our service file could probably throw a NotFoundException
+If we throw an exeception like that? it4s going to flow back up right now to our users controller, which communicates over HTTP
+But for example, we might eventually have another kind of controller inside of our applcation designed to handle WebSocket traffic or an other designed to handle gRPC request. 
+NotFoundException is not compatible with any other kind of communication protocol than HTTP
+The others controllers are not going to properly capture that error, extract information from it, and send a response back
+
+If you start to introduce additional communication protocols into your application, just keep this limitation in mind.
+A very easy thing to do here would be to implement your own custom exception filter
+(but that's not something we are going to see inside this course)
 
 
-
-
+10 - Custom Data Serialization
 
