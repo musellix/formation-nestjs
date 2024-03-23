@@ -650,11 +650,46 @@ and that's it. Now if I fetch a particular user, we've got :
 
 
 Solution to Serialization
+Now imagine we decide to put some admin functionnality inside our app. So there are administraor users, and administrators should be able to look up all the properties, and public users should not see all the properties
+We want to send back differents sets of information with the same Entity
+And this is really not possible by using the approch recommended by Nest
+So we are going to take a look at a slightly different approach that's going to address this wholme issue easily
 
 
+How to build Interceptors
+Interceptors can be used to intercept outgoing responses and incoming requests (very similar to middlewares in many other frameworks)
+We can have as many interceptors intyercept incoming requests or outgoing responses as we want
+We can apply an interceptor either to individual route handlers, 
+or we can apply interceptor to the entire controller, that will make sure that we run the inyerceptor on every handler
+or we can apply the interceptor globally, so for every request or response that comes or goes out of our project
 
+create a file /src/interceptors/serialize.interceptor.ts
+import { CallHandler, ExecutionContext, NestInterceptor } from "@nestjs/common";
+import { Observable, map } from "rxjs";
 
+export class SerializeInterceptor implements NestInterceptor {
 
+    intercept(context: ExecutionContext, handler: CallHandler): Observable<any> {
+        // Run something before a request is handled by the request handler
+        console.log( "I'm running before the handler" )
+
+        return handler.handle().pipe(
+            map( (data: any) => {
+                // Run something before the response is sent out
+                console.log( "i'm running before response is sent out" )
+            })
+        )
+    }
+}
+
+and in the controller, definie the interceptor we want to use
+// GET /auth/:id
+@UseInterceptors(SerializeInterceptor)
+@Get("/:id")
+findUser( @Param('id') id:string ): Promise<User> {
+    console.log( "handler is running" )
+    return this.usersService.findOne( parseInt(id, 10) );
+}
 
 
 
