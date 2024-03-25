@@ -692,12 +692,79 @@ findUser( @Param('id') id:string ): Promise<User> {
 }
 
 
+Serialization in the interceptor
+
+image nestjs-serialization-in-the-interceptor.png
+
+Inside of our interceptor, we're going to take the response that's coming out of our request handler
+The response is User Entity instance, we're going to take that User Entity instance, we're going to convert it into a User DTO instance. This User DTO instance is going to have all of our different serialization rules (I want to show the id and the email, not the password)
+Then we are going to directly return that instance
+Then Nest is going to take that instance, going to turn it into Json automatically and send that back in the response 
+
+serialize.interceptor.ts
+export class SerializeInterceptor implements NestInterceptor {
+
+    constructor( private dto: any) {}
+
+    intercept(context: ExecutionContext, handler: CallHandler): Observable<any> {
+        // Run something before a request is handled by the request handler
+        console.log( "I'm running before the handler" )
+
+        return handler.handle().pipe(
+            map( (data: any) => {
+                // Run something before the response is sent out
+                console.log( "i'm running before response is sent out" )
+
+                return plainToClass(this.dto, data, {
+                    excludeExtraneousValues: true,
+                })
+            })
+        )
+    }
+}
+
+user.controller
+// GET /auth/:id
+@UseInterceptors(new SerializeInterceptor(UserDto))
+@Get("/:id")
+findUser( @Param('id') id:string ): Promise<User> {
+    console.log( "handler is running" )
+    return this.usersService.findOne( parseInt(id, 10) );
+}
+
+user.dto.ts
+import { Expose } from "class-transformer";
+
+export class UserDto {
+
+    @Expose()
+    id: number;
+    
+    @Expose()
+    email: string;
+}
 
 
+Wrapping the Interceptor in a Decorator
+In the controller, this line is too long : 
+@UseInterceptors(new SerializeInterceptor(UserDto))
 
+We will create our own decorator
+For this, in the serialize.interceptor.ts class
+// own decorator !!
+export function Serialize(dto: any) {
+    return UseInterceptors(new SerializeInterceptor(dto))
+}
 
-
-
+and in the controller
+// GET /auth/:id
+// @UseInterceptors(new SerializeInterceptor(UserDto))
+@Serialize(UserDto)
+@Get("/:id")
+findUser( @Param('id') id:string ): Promise<User> {
+    console.log( "handler is running" )
+    return this.usersService.findOne( parseInt(id, 10) );
+}
 
 
 
