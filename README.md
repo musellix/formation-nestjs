@@ -789,6 +789,29 @@ In user.module, add the AuthService in the providers
 })
 
 
+Implement signup functionnality
+in auth.service.ts
+async signup(email: string, password: string) {
+    // see if email is in use
+    const users = await this.usersService.find( email );
+    if ( users.length) {
+        throw new BadRequestException('email in use');
+    }
+
+    // hash the user password
+
+    // create a new user and save it
+
+    // return the user
+
+}
+
+
+Understanding Password hashing
+
+
+
+
 
 
 
