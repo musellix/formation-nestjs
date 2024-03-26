@@ -767,6 +767,42 @@ findUser( @Param('id') id:string ): Promise<User> {
 }
 
 
+11 - Authentification from scratch
+
+Authentification overview
+METTRE IMAGE nestjs-authentification-from-scratch.png
+
+
+Reminder on Service setup
+create auth.service.ts file in users folder
+
+@Injectable()
+export class AuthService {
+    constructor( private usersService:UsersService ) {}
+}
+
+In user.module, add the AuthService in the providers
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [UsersService, AuthService],
+  controllers: [UsersController]
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
