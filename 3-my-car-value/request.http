@@ -1,14 +1,19 @@
 
-### List all message
-# GET http://localhost:3000/messages
-
-
 ### Create a new user
 POST http://localhost:3000/auth/signup
 content-type: application/json
 
 {
-    "email": "aaa@aaa.fr",
+    "email": "aab@aaa.fr",
+    "password": "azerty"
+}
+
+### Sign in
+POST http://localhost:3000/auth/signin
+content-type: application/json
+
+{
+    "email": "aab@aaa.fr",
     "password": "azerty"
 }
 

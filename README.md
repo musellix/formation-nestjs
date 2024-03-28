@@ -799,20 +799,50 @@ async signup(email: string, password: string) {
     }
 
     // hash the user password
+    // generate a salt
+    const salt = randomBytes(8).toString('hex');
+
+    // Hash the salt and the password together
+    const hash = (await promisify(scrypt)( password, salt, 32 )) as Buffer;
+
+    // Join the hashed result and the salt together
+    const result = `${salt}.${hash.toString('hex')}`
 
     // create a new user and save it
+    const user = await this.usersService.create( email, result );
 
     // return the user
-
+    return user;
 }
 
-
-Understanding Password hashing
-
-
+scrypt is the methode to encrypt the password
+scrypt use a callback. has we don't like that, we transform it to a Promise with promisify
 
 
+Handling User sign in
+in auth.service.ts
+async signin(email: string, password: string) {
+    const users = await this.usersService.find( email );
+    if ( !users.length) {
+        throw new NotFoundException('email not found');
+    }
+    const user = users[0];
 
+    // Get ther salt
+    const salt = user.email.split('.')[0];
+
+    // Hash the salt and the password together
+    const hash = (await promisify(scrypt)(password, salt, 32 )) as Buffer;
+    
+    // Join the hashed result and the salt together
+    const result = `${salt}.${hash.toString('hex')}`
+
+    if( result !== user.password ) {
+        throw new BadRequestException('bad password');
+    }
+
+    return user;
+}
 
 
 

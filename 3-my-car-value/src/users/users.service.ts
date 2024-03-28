@@ -17,7 +17,7 @@ export class UsersService {
         return this.repository.findOneBy({ id });
     }
 
-    public find(email: string): Promise<User[]> {
+    public find(email: string) {
         return this.repository.find({where: { email } });
     }
 
