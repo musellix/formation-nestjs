@@ -933,7 +933,88 @@ request.http
 POST http://localhost:3000/auth/signout
 
 
+Interceptor and Decorator
+Automatically tell a handler who the currently signed in user is
 
+
+Decorator
+context : Inside the function we write out some aùount of logic to inspect the incoming request
+The reason it's referred to as an execution context as opposed to just simply request is that ExecutionCONtext can be used to kind of abstract a websocket incoming message, a gRPC request,  an Http request. A lot of incoming kinds of requests. That allows us to write some code that might work equally well with WebSockets, gRPC, Http, GraphQL, ...
+
+
+current-user.decorator.ts
+export const CurrentUser = createParamDecorator(
+    (data: never, context: ExecutionContext) => {
+        const request = context.switchToHttp().getRequest();
+        console.log( request.session.userId);
+        return request.currentUser;
+    }
+)
+
+A better type annotation for data that any might be never. The type annotation of never means this value is never going to be used accessed in any way
+
+
+Interceptor
+@Injectable()
+export class CurrentUserInterceptor implements NestInterceptor {
+
+    constructor( private usersService:UsersService ) {}
+
+    async intercept(context: ExecutionContext, handler: CallHandler) {
+        const request = context.switchToHttp().getRequest();
+        const { userId } = request.session || {};
+
+        if(userId) {
+            const user = await this.usersService.findOne(userId);
+            request.currentUser = user;
+        }
+
+        return handler.handle();
+    }
+}
+
+in user.module.ts
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [
+    UsersService, 
+    AuthService,
+    CurrentUserInterceptor
+  ],
+  controllers: [UsersController]
+})
+
+user.controller.ts
+
+@Controller('auth')
+@Serialize(UserDto)
+@UseInterceptors(CurrentUserInterceptor)
+export class UsersController {
+    ...
+    @Get("/whoami")
+    whoAmI(@CurrentUser() user: string) {
+        return user;
+    }
+}
+
+If we want to use this interceptor to all the controllers of the module, we can definie it in the user.module file
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [
+    UsersService, 
+    AuthService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CurrentUserInterceptor
+    }
+  ],
+  controllers: [UsersController]
+})
+
+
+Guard
+It guard a route and it forbids access to that route if some condition is not met
+Out guard is going to check to see if whoever is making request to a particular route is signed
 
 
 
