@@ -909,11 +909,28 @@ async signin(@Body() body: CreateUserDto, @Session() session): Promise<User> {
 }
 
 
+Getting the current user
+users.controller.ts
+@Get("/whoami")
+whoAmI(@Session() session: any) {
+    return this.usersService.findOne(session.userId);
+}
+
+request.http
+### Get the currently signed in user
+GET http://localhost:3000/auth/whoami
 
 
+Signing out a user
+users.controller.ts
+@Post("/signout")
+signOut(@Session() session: any) {
+    session.userId = null;
+}
 
-
-
+request.http
+### Sign out
+POST http://localhost:3000/auth/signout
 
 
 
