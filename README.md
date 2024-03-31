@@ -1014,7 +1014,21 @@ If we want to use this interceptor to all the controllers of the module, we can 
 
 Guard
 It guard a route and it forbids access to that route if some condition is not met
-Out guard is going to check to see if whoever is making request to a particular route is signed
+Our guard is going to check to see if whoever is making request to a particular route is signed
 
+in src/guards/auth.guards.ts
+export class AuthGuard implements CanActivate {
+    canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+        const request = context.switchToHttp().getRequest();
+        return request.session.userId;
+    }
+}
+
+in user.controller.ts
+@Get("/whoami")
+@UseGuards(AuthGuard)
+whoAmI(@CurrentUser() user: User) {
+    return user;
+}
 
 
