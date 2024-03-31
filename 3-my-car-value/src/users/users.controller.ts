@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Session } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { User } from './user.entity';
@@ -16,15 +16,31 @@ export class UsersController {
         private authService: AuthService
     ) {}
 
+    // Session (set)
+    @Get('/colors/:color')
+    setColor(@Param('color') color: string, @Session() session: any) {
+        session.color = color;
+    }
+    
+    // Session (get)
+    @Get('/colors')
+    getColor(@Session() session: any) {
+        return session.color;
+    }
+
     // POST /auth/signup
     @Post("/signup")
-    createUser(@Body() body: CreateUserDto): void {
-        this.authService.signup(body.email, body.password);
+    async createUser(@Body() body: CreateUserDto, @Session() session): Promise<User> {
+        const user = await this.authService.signup(body.email, body.password);
+        session.userId = user.id;
+        return user;
     }
 
     @Post("/signin")
-    signin(@Body() body: CreateUserDto): void {
-        this.authService.signin(body.email, body.password);
+    async signin(@Body() body: CreateUserDto, @Session() session): Promise<User> {
+        const user = await this.authService.signin(body.email, body.password);
+        session.userId = user.id;
+        return user;
     }
 
     // GET /auth?email=aaa@aaa.fr

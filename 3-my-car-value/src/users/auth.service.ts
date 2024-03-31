@@ -39,7 +39,7 @@ export class AuthService {
         const user = users[0];
 
         // Get ther salt
-        const salt = user.email.split('.')[0];
+        const salt = user.password.split('.')[0];
 
         // Hash the salt and the password together
         const hash = (await promisify(scrypt)(password, salt, 32 )) as Buffer;

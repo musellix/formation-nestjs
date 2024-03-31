@@ -845,14 +845,68 @@ async signin(email: string, password: string) {
 }
 
 
+Setting up Session
+We still don't have the ability to say "Hey this person is signed in and this person is not"
+That's what all this cookie stuff is all about
+
+install librairie Cookie- Session
+npm install --save cookie-session
+npm install --save-dev @types/cookie-session
+
+in main.ts
+const cookieSession = require('cookie-session');
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.use(
+    cookieSession({
+      keys: ['qsdfqsdf']
+    }),
+  )
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true
+    })
+  );
+  await app.listen(3000);
+}
+
+The value of the key can be whatever you want, just a series of random numbers and letters
+This string is going to be used to encrypt the information that is stored inside the cookie
 
 
+Changing and fetching Session data
+In user.controller.ts
+// Session (set)
+@Get('/colors/:color')
+setColor(@Param('color') color: string, @Session() session: any) {
+    session.color = color;
+}
+
+// Session (get)
+@Get('/colors')
+getColor(@Session() session: any) {
+    return session.color;
+}
 
 
+Signing in a User
 
+users.controller.ts
+// POST /auth/signup
+@Post("/signup")
+async createUser(@Body() body: CreateUserDto, @Session() session): Promise<User> {
+    const user = await this.authService.signup(body.email, body.password);
+    session.userId = user.id;
+    return user;
+}
 
-
-
+@Post("/signin")
+async signin(@Body() body: CreateUserDto, @Session() session): Promise<User> {
+    const user = await this.authService.signin(body.email, body.password);
+    session.userId = user.id;
+    return user;
+}
 
 
 
