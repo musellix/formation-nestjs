@@ -1032,3 +1032,67 @@ whoAmI(@CurrentUser() user: User) {
 }
 
 
+12 - Getting started with Unit Testing
+
+Testing overwiew
+Unit testing : Make sure that individual methods on a class are working correctly
+unit testing files are in the src folders (ex : /src/users/users.controller.spec.ts)
+
+If we want to test auth.service.ts, we need to create a copy of the user service in order to create a copy of the authentication service and in turn to make a copy of the user service. That class right there depends upon our users repo and the users repo in turn depends upon SQLite. So to just test our authentication service, we start to get into this kind of dependency nightmare
+The trick is we are going to make a fake copy of the user's service.
+
+
+Integration testing (or e2e) : Test the full flow of a feature
+/test/app.e2e-spec.ts --> Integration tests
+
+
+Testing setup
+create a file /src/users/auth.service.spec.ts
+
+npm run test:watch
+launch the tests on all the test files
+
+A porposition list is display at eh end of the tests
+Watch Usage
+ › Press a to run all tests.
+ › Press f to run only failed tests.
+ › Press p to filter by a filename regex pattern.    
+ › Press t to filter by a test name regex pattern.   
+ › Press q to quit watch mode.
+ › Press i to run failing tests interactively.       
+ › Press Enter to trigger a test run.
+With "p", we can specify the file we want to test
+
+/src/users/auth.service.spec.ts
+describe( 'AuthService', () => {
+    let service: AuthService;
+
+    beforeEach(async ()=>{
+        // Create a fake copy of the users service
+        const fakeUsersService: Partial<UsersService> = {
+            find: () => Promise.resolve([]),
+            create: (email: string, password: string) => Promise.resolve({ id: 1, email, password } as User)
+        };
+
+        const module = await Test.createTestingModule({
+            providers: [
+                AuthService,
+                {
+                    provide: UsersService,
+                    useValue: fakeUsersService
+                }
+            ]
+        }).compile();
+
+        service = module.get(AuthService);
+    });
+
+    it( 'can create an instance of auth service', async () => {
+        expect(service).toBeDefined();
+    });
+});
+
+The providers array is a listing of all the different classes that we might want to inject into our container.
+We override the actual depedency of User service with a fake object fakeUsersService
+
+

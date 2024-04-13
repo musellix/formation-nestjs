@@ -45,7 +45,7 @@ export class AuthService {
         const hash = (await promisify(scrypt)(password, salt, 32 )) as Buffer;
         
         // Join the hashed result and the salt together
-        const result = `${salt}.${hash.toString('hex')}`
+        const result = `${salt}.${hash.toString('hex')}`;
 
         if( result !== user.password ) {
             throw new BadRequestException('bad password');
