@@ -1096,3 +1096,113 @@ The providers array is a listing of all the different classes that we might want
 We override the actual depedency of User service with a fake object fakeUsersService
 
 
+MANAGING APP CONFIGURATION
+
+-- Understanding Dotenv --
+
+setup the config service thing
+we are going to install a package that is going to create the config service for us.
+npm install --save @nestjs/config
+
+internally that package includes another package called dotenv. The only goal of this library is to put together a list of different environment variables that exist
+
+-- Applying Dotenv for Config --
+
+.env.development file 
+DB_NAME='db.sqlite'
+
+.env.test file
+DB_NAME='test.sqlite'
+
+dont commit these two files
+
+app.module.ts
+@Module({
+  imports: [ 
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV}`
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          type: 'sqlite',
+          database: config.get<string>('DB_NAME'),
+          entities: [User, Report],
+          synchronize: true,
+        }
+      }
+    }),
+    UsersModule, 
+    ReportsModule,
+  ],
+  ...
+
+'isGlobal: true' setting just means that we do not have to re-import the config module.
+
+
+-- Specifying the Runtime Environment --
+npm install --save cross-env
+
+dans package.json
+"start": "cross-env NODE_ENV=development nest start",
+"start:dev": "cross-env NODE_ENV=development nest start --watch",
+"start:debug": "cross-env NODE_ENV=development  nest start --debug --watch",
+"start:prod": "node dist/main",
+"lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+"test": "cross-env NODE_ENV=test jest",
+"test:watch": "cross-env NODE_ENV=test jest --watch --maxWorkers=1",
+"test:cov": "cross-env NODE_ENV=test jest --coverage",
+"test:debug": "cross-env NODE_ENV=test node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+"test:e2e": "cross-env NODE_ENV=test jest --config ./test/jest-e2e.json"
+
+
+-  Solving a SQLite Error --
+SQLITE_BUSY: database is locked
+
+Our test runner is jest.
+Jest is going to read our two different spec files because we have app.spec file and auth.spec file. jest tries to run all of your different tests at the exact same time.
+So that means that we have one test running that's going to create an instance of our application and try to access the Test SQLite database. At the same time, we are also going to be running the app spec file and that is also going to be creating an instance of our application and try to connect to that exact same database.
+
+in package.json file
+"test:e2e": "cross-env NODE_ENV=test jest --config ./test/jest-e2e.json --maxWorkers=1"
+
+
+The last thing we have to take care of is to make sure that we delete all the data inside of our test database right before every single test runs.
+
+In jest-e2e.json file
+  },
+  "setupFilesAfterEnv": ["<rootDir>/setup.ts"]
+}
+
+This defines a file that's going to be executed after all of our tests, or I should say, right before
+rootDir is a reference to out test directory
+
+create a setup.ts file in test folder
+import { rm } from "fs/promises";
+import { join } from "path";
+
+global.beforeEach(async () => {
+    try {
+        await rm(join(__dirname, '..', 'test.sqlite'));
+    } catch( error ) {}
+});
+
+
+-- A Followup Test --
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
