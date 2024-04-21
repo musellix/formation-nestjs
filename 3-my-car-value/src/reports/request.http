@@ -1,0 +1,14 @@
+
+POST http://localhost:3000/reports
+content-type: application/json
+
+{
+    "make" : "toyota",
+    "model": "corola",
+    "year": 2016,
+    "mileage": 10000,
+    "longitude": 0,
+    "latitude": 0,
+    "price": 12000
+}
+
